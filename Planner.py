@@ -1,6 +1,6 @@
 from collections import defaultdict
 import random
-
+import math
 import queue
 
 
@@ -182,13 +182,60 @@ class Planner(object):
         steps = 0
 
         while (not state.is_terminal()) and steps < horizon:
-            next_action = self._get_max_q_action(state)
+            next_action = self._get_softmax_q_action(state)
             action_seq.append(next_action)
             state = self.transition_func(state, next_action)
             state_seq.append(state)
             steps += 1
 
         return action_seq, state_seq
+
+    def _get_softmax_q_action(self, state):
+        '''
+        Args:
+            state (State)
+
+        Returns:
+            (str): Action chosen by sampling from a probability distribution
+                   constructed by softmaxing all possible actions
+        '''
+
+        return self._compute_softmax_action_pair(state)
+
+    def _compute_softmax_action_pair(self, state):
+        '''
+        Args:
+            state (State)
+
+        Returns:
+            str: action
+        '''
+
+        # Take random action in case we can't choose one
+        best_action = self.actions[0]
+        tau = 0.1
+        
+        action_softmax_pairs = []
+        softmax_total = 0
+        for action in self.actions:
+            q_s_a         = self.get_q_value(state, action)
+            softmax_val   = math.exp(q_s_a / tau)
+            softmax_total += softmax_val
+            
+            action_softmax_pairs.append((action, softmax_val))
+        
+        action_prob_pairs = []
+        for (action, softmax_val) in action_softmax_pairs:
+            prob = softmax_val / softmax_total
+
+            action_prob_pairs.append((action, prob))
+
+        sample = random.uniform(0,1)
+        for (action, prob) in action_prob_pairs:
+            if sample < prob:
+                return action
+            else:
+                sample -= prob
     
     def _get_max_q_action(self, state):
         '''

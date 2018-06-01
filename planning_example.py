@@ -3,7 +3,7 @@ from Planner import Planner
 
 def main():
     # Setup MDP, Agents.
-    mdp = GridWorldMDP(width=6, height=6, goal_locs=[(6, 6)], slip_prob=0)
+    mdp = GridWorldMDP(width=6, height=6, goal_locs=[(6, 6)])
     value_iter = Planner(mdp, sample_rate=5)
     value_iter.run_vi()
 

@@ -22,12 +22,10 @@ class GridWorldMDP(object):
                 init_loc=(1,1),
                 rand_init=False,
                 goal_locs=[(5,3)],
-                lava_locs=[()],
                 walls=[],
                 is_goal_terminal=True,
                 gamma=0.99,
                 init_state=None,
-                slip_prob=0.0,
                 step_cost=0.0,
                 name="gridworld"):
         '''
@@ -36,7 +34,6 @@ class GridWorldMDP(object):
             width (int)
             init_loc (tuple: (int, int))
             goal_locs (list of tuples: [(int, int)...])
-            lava_locs (list of tuples: [(int, int)...]): These locations return -1 reward.
         '''
 
         # Setup init location.
@@ -64,9 +61,7 @@ class GridWorldMDP(object):
         self.goal_locs = goal_locs
         self.cur_state = GridWorldState(init_loc[0], init_loc[1])
         self.is_goal_terminal = is_goal_terminal
-        self.slip_prob = slip_prob
         self.name = name
-        self.lava_locs = lava_locs
 
     def get_init_state(self):
         return self.init_state
@@ -94,8 +89,6 @@ class GridWorldMDP(object):
         '''
         if self._is_goal_state_action(state, action):
             return 1.0 - self.step_cost
-        elif (state.x, state.y) in self.lava_locs:
-            return -1.0
         else:
             return 0 - self.step_cost
 
@@ -137,18 +130,6 @@ class GridWorldMDP(object):
         if state.is_terminal():
             return state
 
-        r = random.random()
-        if self.slip_prob > r:
-            # Flip dir.
-            if action == "up":
-                action = random.choice(["left", "right"])
-            elif action == "down":
-                action = random.choice(["left", "right"])
-            elif action == "left":
-                action = random.choice(["up", "down"])
-            elif action == "right":
-                action = random.choice(["up", "down"])
-
         if action == "up" and state.y < self.height and not self.is_wall(state.x, state.y + 1):
             next_state = GridWorldState(state.x, state.y + 1)
         elif action == "down" and state.y > 1 and not self.is_wall(state.x, state.y - 1):
@@ -183,9 +164,6 @@ class GridWorldMDP(object):
     def get_goal_locs(self):
         return self.goal_locs
 
-    def get_lava_locs(self):
-        return self.lava_locs
-
     def visualize_initial_map(self):
         """
         Args:
@@ -216,26 +194,7 @@ class GridWorldMDP(object):
                     print(' - ', end='')
             print('\n')
 
-def _error_check(state, action):
-    '''
-    Args:
-        state (State)
-        action (str)
-
-    Summary:
-        Checks to make sure the received state and action are of the right type.
-    '''
-
-    if action not in GridWorldMDP.ACTIONS:
-        print("(simple_rl) GridWorldError: the action provided (" + str(action) + ") was invalid in state: " + str(state) + ".")
-        quit()
-
-    if not isinstance(state, GridWorldState):
-        print("(simple_rl) GridWorldError: the given state (" + str(state) + ") was not of the correct class.")
-        quit()
-
-
-def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None, goal_num=None, slip_prob=0.0):
+def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None, goal_num=None):
     '''
     Args:
         file_name (str)
@@ -294,7 +253,7 @@ def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None
     if len(goal_locs) == 0:
         goal_locs = [(num_cols, num_rows)]
 
-    return GridWorldMDP(width=num_cols, height=num_rows, init_loc=(agent_x, agent_y), goal_locs=goal_locs, walls=walls, name=name, slip_prob=slip_prob)
+    return GridWorldMDP(width=num_cols, height=num_rows, init_loc=(agent_x, agent_y), goal_locs=goal_locs, walls=walls, name=name)
 
     def reset(self):
         if self.rand_init:

@@ -16,10 +16,10 @@ class GridWorldState(object):
 
     def set_terminal(self, is_term = True):
         self._is_terminal = is_term
-
+    
     def __hash__(self):
         return hash(tuple(self.data))
-
+    
     def __str__(self):
         return "s: (" + str(self.x) + "," + str(self.y) + ")"
 
