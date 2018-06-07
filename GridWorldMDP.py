@@ -5,6 +5,7 @@ import random
 import sys
 import os
 import numpy as np
+import copy
 
 from GridWorldState import GridWorldState
 
@@ -14,7 +15,7 @@ class GridWorldMDP(object):
     ''' Class for a Grid World MDP '''
 
     # Static constants.
-    ACTIONS = ["up", "down", "left", "right"]
+    ACTIONS = ["stay", "up", "down", "left", "right"]
 
     def __init__(self,
                 width=5,
@@ -115,6 +116,8 @@ class GridWorldMDP(object):
             return True
         elif action == "up" and (state.x, state.y + 1) in goals:
             return True
+        elif action == "stay" and (state.x, state.y) in goals:
+            return True
         else:
             return False
 
@@ -138,6 +141,8 @@ class GridWorldMDP(object):
             next_state = GridWorldState(state.x + 1, state.y)
         elif action == "left" and state.x > 1 and not self.is_wall(state.x - 1, state.y):
             next_state = GridWorldState(state.x - 1, state.y)
+        elif action == "stay":
+            next_state = GridWorldState(state.x, state.y)
         else:
             next_state = GridWorldState(state.x, state.y)
 
@@ -164,6 +169,22 @@ class GridWorldMDP(object):
     def get_goal_locs(self):
         return self.goal_locs
 
+    def state_to_reward(self, state):
+        """
+        Returns the reward value for a given state
+
+        Args:
+            state (GridWorldState): State we want to translate into reward
+
+        Returns:
+            reward (float): Reward value at the given state
+        """
+        if (state.x, state.y) in self.goal_locs:
+            return 1.0
+        else:
+            return 0.0
+
+
     def visualize_initial_map(self):
         """
         Args:
@@ -182,17 +203,24 @@ class GridWorldMDP(object):
                 'g' --> goal
                 '-' --> empty
         """
-        for i in reversed(range(1, self.height+1)):
-            for j in range(1, self.width+1):
-                if (i, j) in self.goal_locs:
+        for y in reversed(range(1, self.height+1)):
+            for x in range(1, self.width+1):
+                if (x, y) in self.goal_locs:
                     print(' g ', end='')
-                elif (i, j) in self.walls:
+                elif (x, y) in self.walls:
                     print(' w ', end='')
-                elif (i, j) == self.init_loc:
+                elif (x, y) == self.init_loc:
                     print(' a ', end='')
                 else:
                     print(' - ', end='')
             print('\n')
+
+    def reset(self):
+        if self.rand_init:
+            init_loc = random.randint(1, width), random.randint(1, height)
+            self.cur_state = GridWorldState(init_loc[0], init_loc[1])
+        else:
+            self.cur_state = copy.deepcopy(self.init_state)
 
 def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None, goal_num=None):
     '''
@@ -217,7 +245,7 @@ def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None
         name = file_name.split(".")[0]
 
     grid_path = os.path.dirname(os.path.realpath(__file__))
-    wall_file = open(os.path.join(grid_path, "txt_grids", file_name))
+    wall_file = open(os.path.join(grid_path, "gridworld_maps", file_name))
     wall_lines = wall_file.readlines()
 
     # Get walls, agent, goal loc.
@@ -254,14 +282,4 @@ def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None
         goal_locs = [(num_cols, num_rows)]
 
     return GridWorldMDP(width=num_cols, height=num_rows, init_loc=(agent_x, agent_y), goal_locs=goal_locs, walls=walls, name=name)
-
-    def reset(self):
-        if self.rand_init:
-            init_loc = random.randint(1, width), random.randint(1, height)
-            self.cur_state = GridWorldState(init_loc[0], init_loc[1])
-        else:
-            self.cur_state = copy.deepcopy(self.init_state)
-    
-
-            
 

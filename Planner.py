@@ -31,7 +31,7 @@ class Planner(object):
         self.transition_func = self.mdp.get_transition_func()
         self.reward_func     = self.mdp.get_reward_func()
         self.gamma           = self.mdp.get_gamma()
-
+    
     def _compute_matrix_from_trans_func(self):
         if self.has_computed_matrix:
             self._compute_reachable_state_space()
@@ -51,7 +51,7 @@ class Planner(object):
                     self.trans_dict[s][a][s_prime] += 1.0 / self.sample_rate
 
         self.has_computed_matrix = True
-
+    
     def get_gamma(self):
         return self.mdp.get_gamma()
 
@@ -143,9 +143,6 @@ class Planner(object):
                     q_s_a = self.get_q_value(s, a)
                     max_q = q_s_a if q_s_a > max_q else max_q
 
-                #     print("\tq_s_a", a, q_s_a)
-                # print()
-
                 # Check terminating condition.
                 max_diff = max(abs(self.value_func[s] - max_q), max_diff)
 
@@ -169,7 +166,9 @@ class Planner(object):
             horizon (int)
 
         Returns:
-            (list): List of actions
+            action_seq (str list): List of actions
+            state_seq (GridWorldState list): List of states visited
+            reward_seq (float list): List of rewards corresponding to state
         '''
 
         state = self.mdp.get_init_state() if state is None else state
@@ -178,17 +177,32 @@ class Planner(object):
             print("Warning: VI has not been run. Plan will be random.")
 
         action_seq = []
-        state_seq = [state]
+        state_seq  = []
+        reward_seq = [] 
         steps = 0
 
         while (not state.is_terminal()) and steps < horizon:
             next_action = self._get_softmax_q_action(state)
             action_seq.append(next_action)
-            state = self.transition_func(state, next_action)
-            state_seq.append(state)
-            steps += 1
 
-        return action_seq, state_seq
+            current_reward = self.mdp.state_to_reward(state)
+            reward_seq.append(current_reward)
+
+            state_seq.append(state)
+            state = self.transition_func(state, next_action)
+            steps += 1
+        
+        if state.is_terminal():
+            next_action = "stay"
+            action_seq.append(next_action)
+            
+            current_reward = self.mdp.state_to_reward(state)
+            reward_seq.append(current_reward)
+
+            state_seq.append(state)
+             
+
+        return action_seq, state_seq, reward_seq
 
     def _get_softmax_q_action(self, state):
         '''
@@ -213,8 +227,7 @@ class Planner(object):
 
         # Take random action in case we can't choose one
         best_action = self.actions[0]
-        tau = 0.1
-        
+        tau = 0.005
         action_softmax_pairs = []
         softmax_total = 0
         for action in self.actions:

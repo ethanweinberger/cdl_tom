@@ -21,7 +21,7 @@ class GridWorldState(object):
         return hash(tuple(self.data))
     
     def __str__(self):
-        return "s: (" + str(self.x) + "," + str(self.y) + ")"
+        return "(" + str(self.x) + "," + str(self.y) + ")"
 
     def __eq__(self, other):
         return isinstance(other, GridWorldState) and self.x == other.x and self.y == other.y
