@@ -68,6 +68,22 @@ class Planner(object):
             self._compute_reachable_state_space()
             return list(self.states)
 
+    def set_reward_function(self, reward_matrix):
+        """
+        Swaps out the current MDP's reward function for another, where
+        the reward in each state is specified by reward_matrix.
+
+        Args:
+            reward_matrix (height x width array): Reward value for each state
+
+        Returns:
+            None (modifies self.reward_func and self.mdp)
+
+        """
+
+        self.mdp.set_reward_function(reward_matrix)
+        self.reward_func = self.mdp.get_reward_func()
+    
     def get_value(self, s):
         '''
         Args:

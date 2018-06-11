@@ -5,11 +5,13 @@ a "slow" method
 
 import numpy as np
 import math
+import copy
 
 class SlowRewardSampler(object):
 
     def __init__(self, planner):
-        self.planner = planner
+        #TODO: Make this copy unnecessary
+        self.planner = copy.deepcopy(planner)
 
 
     def sample_reward_functions(self, demonstrations, num_samples=50):
@@ -32,11 +34,10 @@ class SlowRewardSampler(object):
             current_likelihood    = self._get_reward_function_log_likelihood(
                     current_reward_matrix, demonstrations) 
 
-            #print(current_likelihood)
             if current_likelihood > best_likelihood:
                 best_likelihood = current_likelihood
                 reward_matrix = current_reward_matrix
-        
+
         return reward_matrix
 
     def _generate_reward_function(self, lambda_parameter=1):
@@ -77,8 +78,8 @@ class SlowRewardSampler(object):
         
         """
 
-        if self.planner.has_planned == False:
-            self.planner.run_vi()
+        self.planner.set_reward_function(reward_matrix)
+        self.planner.run_vi()
 
         total_log_likelihood = 0
         for demonstration in demonstrations:
@@ -103,15 +104,22 @@ class SlowRewardSampler(object):
             step_log_likelihood (float): Log-likelihood of a (state, action) pair
 
         """
+        
 
         softmax_total = 0
-        state = step.cur_state
-        action = step.action
+        cur_state = step.cur_state
+        cur_action = step.action
+        max_val = max(self.planner.get_q_value(cur_state, action) for action in self.planner.actions)
+
         for action in self.planner.actions:
-            q_s_a         = self.planner.get_q_value(state, action)
+            q_s_a         = self.planner.get_q_value(cur_state, action)
+            q_s_a         -= max_val
             softmax_val   = math.exp(q_s_a / self.planner.tau)
             softmax_total += softmax_val
-        q_s_a = self.planner.get_q_value(state, action)
+
+        q_s_a = self.planner.get_q_value(cur_state, cur_action)
+        q_s_a -= max_val
+
         softmax_val = math.exp(q_s_a / self.planner.tau)
         step_likelihood = softmax_val / softmax_total
         step_log_likelihood = np.log(step_likelihood)

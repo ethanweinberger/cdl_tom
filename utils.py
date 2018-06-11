@@ -11,7 +11,7 @@ from collections import namedtuple
 #TODO: Refactor this into a class
 Step = namedtuple('Step', 'cur_state action reward')
 
-def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None, goal_num=None):
+def make_grid_world_from_file(file_name):
     """
     Builds a GridWorldMDP from a file:
     	'w' --> wall
@@ -20,18 +20,14 @@ def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None
         '-' --> empty
     
     Args:
-        file_name (str)
-        randomize (bool): If true, chooses a random agent location and goal location.
-        num_goals (int)
-        name (str)
+        file_name (str): Name of map file
 
     Returns:
         (GridWorldMDP)
 
     """
 
-    if name is None:
-        name = file_name.split(".")[0]
+    name = file_name.split(".")[0]
 
     grid_path = os.path.dirname(os.path.realpath(__file__))
     wall_file = open(os.path.join(grid_path, "gridworld_maps", file_name))
@@ -55,20 +51,6 @@ def make_grid_world_from_file(file_name, randomize=False, num_goals=1, name=None
                 agent_x, agent_y = j + 1, num_rows - i
             elif ch == "-":
                 empty_cells.append((j + 1, num_rows - i))
-
-    if goal_num is not None:
-        goal_locs = [goal_locs[goal_num % len(goal_locs)]]
-
-    if randomize:
-        agent_x, agent_y = random.choice(empty_cells)
-        if len(goal_locs) == 0:
-            # Sample @num_goals random goal locations.
-            goal_locs = random.sample(empty_cells, num_goals)
-        else:
-            goal_locs = random.sample(goal_locs, num_goals)
-
-    if len(goal_locs) == 0:
-        goal_locs = [(num_cols, num_rows)]
 
     return GridWorldMDP(width=num_cols, height=num_rows, init_loc=(agent_x, agent_y), goal_locs=goal_locs, walls=walls, name=name)
 

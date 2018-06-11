@@ -1,15 +1,12 @@
-'''GridWorldMDPClass.py: Contains the GridWorldMDP class. '''
+"""GridWorldMDPClass.py: Contains the GridWorldMDP class."""
 
-# Python imports.
 import random
 import sys
 import os
 import numpy as np
 import copy
-
 from GridWorldState import GridWorldState
 
-# Other imports.
 
 class GridWorldMDP(object):
     ''' Class for a Grid World MDP '''
@@ -49,7 +46,9 @@ class GridWorldMDP(object):
         self.transition_func = self._transition_func
         self.reward_func = self._reward_func
         self.gamma = gamma
-
+        
+        #TODO: Refactor class so it always uses this
+        self.reward_matrix = None
         #MDP.__init__(self, GridWorldMDP.ACTIONS, self._transition_func, self._reward_func, init_state=init_state, gamma=gamma)
 
         if type(goal_locs) is not list:
@@ -78,16 +77,27 @@ class GridWorldMDP(object):
     def get_gamma(self):
         return self.gamma
 
+    def set_reward_function(self, reward_matrix):
+        self.reward_matrix = reward_matrix
+        self.reward_func = self._reward_func_from_matrix
+
+    def _reward_func_from_matrix(self, state, action):
+        next_state = self.transition_func(state, action)
+        next_state_row = next_state.y
+        next_state_col = next_state.x
+        reward = self.reward_matrix[next_state_row - 1, next_state_col - 1] - self.step_cost
+        return reward
 
     def _reward_func(self, state, action):
-        '''
+        """
         Args:
             state (State)
             action (str)
 
         Returns
             (float)
-        '''
+        """
+
         if self._is_goal_state_action(state, action):
             return 1.0 - self.step_cost
         else:
