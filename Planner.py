@@ -176,7 +176,7 @@ class Planner(object):
         for key in self.value_func.keys():
             print(key, ":", self.value_func[key])
 
-    def plan(self, state=None, horizon=20):
+    def plan(self, state=None, horizon=50):
         '''
         Args:
             state (State): Starting state (defaults to MDP's initial state if None)

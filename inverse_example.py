@@ -1,6 +1,5 @@
 import csv
 from GridWorldMDP import GridWorldMDP
-from GridWorldMDP import make_grid_world_from_file
 from Planner import Planner
 import numpy as np
 from deep_maxent_irl import deep_maxent_irl
@@ -8,13 +7,14 @@ from vis_utils import heatmap_2d
 from utils import generate_demonstrations
 from utils import make_grid_world_from_file
 from utils import Step
+from utils import get_reward_function_log_likelihood 
 import argparse
 import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_demonstrations", type=int, default=25,
         help="Number of training demonstrations")
-parser.add_argument("--map", type=str, default="empty_map.mp", help="Map file name")
+parser.add_argument("--map", type=str, default="big_map.mp", help="Map file name")
 parser.add_argument("--tau", type=float, default=0.005, help="Softmax parameter")
 parser.add_argument("--learning_rate", type=float, default=0.05, help="Network learning rate")
 parser.add_argument("--num_iterations", type=int, default=20, 
@@ -27,7 +27,7 @@ args = parser.parse_args()
 def main():
     # Setup MDP, Agents.
    
-    """
+    
     mdp = make_grid_world_from_file(args.map) 
     mdp.visualize_initial_map()
     planner = Planner(mdp, sample_rate=5)
@@ -40,9 +40,12 @@ def main():
             feature_map, planner, expert_demonstrations, args.learning_rate, args.num_iterations) 
 
     reward_matrix = np.reshape(reward_array, (mdp.height, mdp.width))
+    reward_likelihood = get_reward_function_log_likelihood(planner, 
+            reward_matrix, expert_demonstrations)
+    print(reward_likelihood)
     heatmap_2d(reward_matrix, "Recovered Reward Values")
-    """
-    generate_reward_prior()
+    
+    #generate_reward_prior()
 	
 def generate_reward_prior():
     mdp = make_grid_world_from_file("empty_map.mp")

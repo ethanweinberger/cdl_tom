@@ -4,6 +4,9 @@ Miscellanous utility functions for demonstration scripts
 
 import os
 import random
+import math
+import copy
+import numpy as np
 from Planner import Planner 
 from GridWorldMDP import GridWorldMDP
 from collections import namedtuple
@@ -53,6 +56,75 @@ def make_grid_world_from_file(file_name):
                 empty_cells.append((j + 1, num_rows - i))
 
     return GridWorldMDP(width=num_cols, height=num_rows, init_loc=(agent_x, agent_y), goal_locs=goal_locs, walls=walls, name=name)
+
+def get_reward_function_log_likelihood(planner, reward_matrix, demonstrations):
+    """
+    Given a matrix representing a potential reward function, calculates
+    the likelihood given a list of expert demonstrations
+
+    Args:
+        planner (Planner): Planner object representing the true mdp
+        reward_matrix (Height * Weight array): Matrix representing the rewards
+                                               contained in each state
+        demonstrations (List of step lists): List of demonstrations composed
+                                             of lists of step tuples
+
+    Returns:
+        total_log_likelihood (float): Log likelihood of demonstrations given reward matrix
+
+    """
+
+    #TODO: Refactor so we don't need to make a copy
+    planner = copy.deepcopy(planner)
+
+    planner.set_reward_function(reward_matrix)
+    planner.run_vi() 
+
+    total_log_likelihood = 0
+    for demonstration in demonstrations:
+         demonstration_log_likelihood = 0
+         for step in demonstration:
+             demonstration_log_likelihood += _get_step_log_likelihood(planner, step)
+         total_log_likelihood += demonstration_log_likelihood
+
+    return total_log_likelihood
+
+def _get_step_log_likelihood(planner, step):
+    """
+    Based on a given step in an expert demonstration, calculates the
+    likelihood of that step given that our agent has run value iteration
+    on the world
+
+    Args:
+        planner (PLanner): PLanner object representing our MDP
+        step (named tuple): Container for all relevant information (state, action, etc)
+                            about the current step in an expert demonstration
+
+    Returns:
+        step_log_likelihood (float): Log-likelihood of a (state, action) pair
+
+    """
+
+
+    softmax_total = 0
+    cur_state = step.cur_state
+    cur_action = step.action
+    max_val = max(planner.get_q_value(cur_state, action) for action in planner.actions)
+
+    for action in planner.actions:
+        q_s_a         = planner.get_q_value(cur_state, action)
+        q_s_a         -= max_val
+        softmax_val   = math.exp(q_s_a / planner.tau)
+        softmax_total += softmax_val
+
+    q_s_a = planner.get_q_value(cur_state, cur_action)
+    q_s_a -= max_val
+
+    softmax_val = math.exp(q_s_a / planner.tau)
+    step_likelihood = softmax_val / softmax_total
+    step_log_likelihood = np.log(step_likelihood)
+
+    return step_log_likelihood
 
 def generate_demonstrations(planner, num_demonstrations):
     """

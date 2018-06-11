@@ -10,7 +10,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--tau", type=float, default=0.005, help="Softmax parameter")
-parser.add_argument("--map", type=str, default="empty_map.mp", help="Map file name")
+parser.add_argument("--map", type=str, default="big_map.mp", help="Map file name")
 args = parser.parse_args()
 
 def main():

@@ -25,7 +25,6 @@ class DeepIRLFC(object):
         self.grad_theta = tf.gradients(self.reward, self.theta, -self.grad_r)
         self.grad_theta = [tf.add(l2*self.grad_l2[i], self.grad_theta[i]) for i in range(len(self.grad_l2))]
 
-        #TODO: Where does the 100 come from?!?!?
         self.grad_theta, _ = tf.clip_by_global_norm(self.grad_theta, 100.0)
         self.grad_norms = tf.global_norm(self.grad_theta)
 

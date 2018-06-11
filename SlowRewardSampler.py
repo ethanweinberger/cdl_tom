@@ -7,12 +7,12 @@ import numpy as np
 import math
 import copy
 
+from utils import get_reward_function_log_likelihood
+
 class SlowRewardSampler(object):
 
     def __init__(self, planner):
-        #TODO: Make this copy unnecessary
-        self.planner = copy.deepcopy(planner)
-
+        self.planner = planner
 
     def sample_reward_functions(self, demonstrations, num_samples=50):
         """
@@ -31,12 +31,14 @@ class SlowRewardSampler(object):
 
         for i in range(num_samples):
             current_reward_matrix = self._generate_reward_function()
-            current_likelihood    = self._get_reward_function_log_likelihood(
-                    current_reward_matrix, demonstrations) 
+            current_likelihood    = get_reward_function_log_likelihood(
+                    self.planner, current_reward_matrix, demonstrations) 
 
             if current_likelihood > best_likelihood:
                 best_likelihood = current_likelihood
                 reward_matrix = current_reward_matrix
+
+            print(current_likelihood)
 
         return reward_matrix
 
@@ -61,67 +63,3 @@ class SlowRewardSampler(object):
 
         normalized_reward_matrix = reward_matrix / max_reward
         return normalized_reward_matrix
-
-    def _get_reward_function_log_likelihood(self, reward_matrix, demonstrations):
-        """
-        Given a matrix representing a potential reward function, calculates
-        the likelihood given a list of expert demonstrations
-
-        Args:
-            reward_matrix (Height * Weight array): Matrix representing the rewards
-                                                   contained in each state
-            demonstrations (List of step lists): List of demonstrations composed
-                                                 of lists of step tuples
-        
-        Returns:
-            total_log_likelihood (float): Log likelihood of demonstrations given reward matrix
-        
-        """
-
-        self.planner.set_reward_function(reward_matrix)
-        self.planner.run_vi()
-
-        total_log_likelihood = 0
-        for demonstration in demonstrations:
-            demonstration_log_likelihood = 0
-            for step in demonstration:
-               demonstration_log_likelihood += self._get_step_log_likelihood(step)
-            total_log_likelihood += demonstration_log_likelihood
-        
-        return total_log_likelihood
-    
-    def _get_step_log_likelihood(self, step):
-        """
-        Based on a given step in an expert demonstration, calculates the
-        likelihood of that step given that our agent has run value iteration
-        on the world
-
-        Args:
-            step (named tuple): Container for all relevant information (state, action, etc)
-                                about the current step in an expert demonstration
-
-        Returns:
-            step_log_likelihood (float): Log-likelihood of a (state, action) pair
-
-        """
-        
-
-        softmax_total = 0
-        cur_state = step.cur_state
-        cur_action = step.action
-        max_val = max(self.planner.get_q_value(cur_state, action) for action in self.planner.actions)
-
-        for action in self.planner.actions:
-            q_s_a         = self.planner.get_q_value(cur_state, action)
-            q_s_a         -= max_val
-            softmax_val   = math.exp(q_s_a / self.planner.tau)
-            softmax_total += softmax_val
-
-        q_s_a = self.planner.get_q_value(cur_state, cur_action)
-        q_s_a -= max_val
-
-        softmax_val = math.exp(q_s_a / self.planner.tau)
-        step_likelihood = softmax_val / softmax_total
-        step_log_likelihood = np.log(step_likelihood)
-
-        return step_log_likelihood
