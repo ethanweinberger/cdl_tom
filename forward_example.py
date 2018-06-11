@@ -3,7 +3,7 @@ Test script for forward model.
 """
 
 from GridWorldMDP import GridWorldMDP
-from GridWorldMDP import make_grid_world_from_file
+from utils import make_grid_world_from_file
 from Planner import Planner
 import argparse
 

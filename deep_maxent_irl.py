@@ -192,9 +192,8 @@ def compute_state_visitation_frequency(planner, demonstrations, policy):
     trans_dict = planner.trans_dict
     states = planner.get_states()
     actions = planner.actions
-    #TODO: This choice of T seems arbitrary...
-    #Can I replace it with a max instead?
-    T = len(demonstrations[0])
+
+    T = max(len(demonstration) for demonstration in demonstrations)
     
     #mu[s, t] is probability of visiting state s at time t
     mu = np.zeros([num_states, T])

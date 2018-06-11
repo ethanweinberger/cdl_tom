@@ -6,14 +6,14 @@ import queue
 
 class Planner(object):
 
-    def __init__(self, mdp, name="value_iter", delta=0.0001, max_iterations=500, sample_rate=3):
+    def __init__(self, mdp, name="value_iter", delta=0.0001, tau=0.005, max_iterations=500, sample_rate=3):
         '''
         Args:
             mdp (MDP)
             delta (float): After an iteration if VI, if no change more than @\delta has occurred, terminates.
             max_iterations (int): Hard limit for number of iterations.
             sample_rate (int): Determines how many samples from @mdp to take to estimate T(s' | s, a).
-            horizon (int): Number of steps before terminating.
+            tau (float): Softmax parameter
         '''
 
         self.delta = delta
@@ -31,6 +31,7 @@ class Planner(object):
         self.transition_func = self.mdp.get_transition_func()
         self.reward_func     = self.mdp.get_reward_func()
         self.gamma           = self.mdp.get_gamma()
+        self.tau = tau
     
     def _compute_matrix_from_trans_func(self):
         if self.has_computed_matrix:
@@ -227,12 +228,11 @@ class Planner(object):
 
         # Take random action in case we can't choose one
         best_action = self.actions[0]
-        tau = 0.005
         action_softmax_pairs = []
         softmax_total = 0
         for action in self.actions:
             q_s_a         = self.get_q_value(state, action)
-            softmax_val   = math.exp(q_s_a / tau)
+            softmax_val   = math.exp(q_s_a / self.tau)
             softmax_total += softmax_val
             
             action_softmax_pairs.append((action, softmax_val))
