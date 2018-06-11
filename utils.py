@@ -97,10 +97,6 @@ def generate_demonstrations(planner, num_demonstrations):
         for state, action, reward in zip(state_seq, action_seq, reward_seq):
             episode.append(Step(cur_state = state, action = action, reward = reward))
 
-        #Added so the network recognizes end states as "reward" states
-        for i in range(10):
-            episode.append(episode[-1])
-
         trajectories.append(episode)
 
     return trajectories

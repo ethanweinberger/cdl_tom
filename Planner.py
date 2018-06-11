@@ -160,11 +160,11 @@ class Planner(object):
         for key in self.value_func.keys():
             print(key, ":", self.value_func[key])
 
-    def plan(self, state=None, horizon=100):
+    def plan(self, state=None, horizon=20):
         '''
         Args:
-            state (State)
-            horizon (int)
+            state (State): Starting state (defaults to MDP's initial state if None)
+            horizon (int): Maximum number of steps
 
         Returns:
             action_seq (str list): List of actions
@@ -230,8 +230,13 @@ class Planner(object):
         best_action = self.actions[0]
         action_softmax_pairs = []
         softmax_total = 0
+
+        #To prevent softmax from overflowing
+        max_val = max(self.get_q_value(state, action) for action in self.actions)
+
         for action in self.actions:
             q_s_a         = self.get_q_value(state, action)
+            q_s_a         -= max_val
             softmax_val   = math.exp(q_s_a / self.tau)
             softmax_total += softmax_val
             

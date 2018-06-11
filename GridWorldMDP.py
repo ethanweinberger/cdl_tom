@@ -24,7 +24,7 @@ class GridWorldMDP(object):
                 rand_init=False,
                 goal_locs=[(5,3)],
                 walls=[],
-                is_goal_terminal=True,
+                is_goal_terminal=False,
                 gamma=0.99,
                 init_state=None,
                 step_cost=0.0,
