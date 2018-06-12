@@ -3,6 +3,7 @@ Functions used to sample a reward function using
 a "slow" method
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import math
 import copy
@@ -13,19 +14,24 @@ class SlowRewardSampler(object):
 
     def __init__(self, planner):
         self.planner = planner
+        self.likelihood_vals = []
 
-    def sample_reward_functions(self, demonstrations, num_samples=50):
+    def sample_reward_functions(self, demonstrations, num_samples=50, plot_likelihood_vals=False):
         """
         Randomly sample num_samples possible reward matrices
         
         Args:
+            demonstrations (list of step lists): Expert demonstrations
             num_samples (int): Number of sample to take before terminating
+            plot_likelihood_vals (Bool): When true, saves a plot of the best likelihood value
+                                         at each timestep
 
         Returns:
             rewards (heigh x width array): Matrix representing the reward values
                                            at each state
 
         """
+        self.likelihood_vals = []
         best_likelihood = float("-inf")
         reward_matrix = np.zeros((self.planner.mdp.height, self.planner.mdp.width))
 
@@ -38,7 +44,7 @@ class SlowRewardSampler(object):
                 best_likelihood = current_likelihood
                 reward_matrix = current_reward_matrix
 
-            print(current_likelihood)
+            self.likelihood_vals.append(best_likelihood)
 
         return reward_matrix
 

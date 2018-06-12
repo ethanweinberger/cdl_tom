@@ -14,7 +14,7 @@ import random
 parser = argparse.ArgumentParser()
 parser.add_argument("--num_demonstrations", type=int, default=25,
         help="Number of training demonstrations")
-parser.add_argument("--map", type=str, default="big_map.mp", help="Map file name")
+parser.add_argument("--map", type=str, default="empty_map.mp", help="Map file name")
 parser.add_argument("--tau", type=float, default=0.005, help="Softmax parameter")
 parser.add_argument("--learning_rate", type=float, default=0.05, help="Network learning rate")
 parser.add_argument("--num_iterations", type=int, default=20, 
@@ -24,10 +24,9 @@ parser.add_argument("--num_iterations", type=int, default=20,
 args = parser.parse_args()
 
 
-def main():
+def inverse_model_example():
     # Setup MDP, Agents.
    
-    
     mdp = make_grid_world_from_file(args.map) 
     mdp.visualize_initial_map()
     planner = Planner(mdp, sample_rate=5)
@@ -42,7 +41,7 @@ def main():
     reward_matrix = np.reshape(reward_array, (mdp.height, mdp.width))
     reward_likelihood = get_reward_function_log_likelihood(planner, 
             reward_matrix, expert_demonstrations)
-    print(reward_likelihood)
+
     heatmap_2d(reward_matrix, "Recovered Reward Values")
     
     #generate_reward_prior()
