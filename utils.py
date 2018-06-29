@@ -64,7 +64,7 @@ def get_reward_function_log_likelihood(planner, reward_matrix, demonstrations):
 
     Args:
         planner (Planner): Planner object representing the true mdp
-        reward_matrix (Height * Weight array): Matrix representing the rewards
+        reward_matrix (Height * Width array): Matrix representing the rewards
                                                contained in each state
         demonstrations (List of step lists): List of demonstrations composed
                                              of lists of step tuples
@@ -88,6 +88,77 @@ def get_reward_function_log_likelihood(planner, reward_matrix, demonstrations):
          total_log_likelihood += demonstration_log_likelihood
 
     return total_log_likelihood
+
+def get_partial_trajectory_log_likelihood(planner, reward_matrix, partial_trajectory):
+    """
+    Given a list of steps representing a partial trajectory, determines the likelihood of that
+    trajectory.  Different reward matrices can be used to compare the validity of different reward
+    functions.
+
+    Args:
+        planner (Planner): Planner object representing our mdp
+        reward_matrix: (Height * Width array): Matrix representing the rewards contained
+                                               in each state
+        partial_trajectory (step list): Our list of moves so far
+    Returns:
+        total_log_likelihood (float): Log likelihood of demonstrations given reward matrix
+
+    """
+    planner = copy.deepcopy(planner)
+    planner.set_reward_function(reward_matrix)
+    planner.run_vi()
+    
+    total_log_likelihood = 0
+    for step in partial_trajectory:
+        total_log_likelihood += _get_step_log_likelihood(planner, step)
+    return total_log_likelihood
+
+
+def get_potential_rewards(reward_matrix, reward_cutoff=0.5):
+    """
+    Given a matrix representing a reward prior, determines the locations of all
+    potential reward squares in the matrix
+
+    Args:
+	reward_matrix (Height * Width array): Matrix representing the rewards contained
+                                              in each state
+        reward_cutoff (float): Cutoff for what reward value coutns as a "reward square"
+    Returns:
+        reward_locations (tuple list): List of tuples with the location of each reward
+    
+    """
+    reward_locations = []
+    height, width = reward_matrix.shape
+
+    for row in range(height):
+       for column in range(width):
+           if reward_matrix[row, column] > reward_cutoff:
+               reward_locations.append((row,column))
+    
+    return reward_locations
+     
+
+def create_reward_matrix_from_location(location, planner):
+    """
+    Give a location tuple, creates a reward matrix with the location represented
+    by that tuple as the reward
+
+    Args:
+        location (int tuple): Location of our reward
+        planner (Planner): planner object containng our MDP
+    Returns:
+        new_reward_matrix
+    """
+
+    height = planner.mdp.height
+    width = planner.mdp.width
+    
+    new_reward_matrix = np.zeros((height, width))
+    new_reward_matrix[location[0], location[1]] = 1.0
+
+    return new_reward_matrix
+
+    
 
 def _get_step_log_likelihood(planner, step):
     """

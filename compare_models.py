@@ -32,6 +32,7 @@ def main():
     reward_matrix = sampler.sample_reward_functions(demonstrations)
 
     plt.plot(sampler.likelihood_vals)
+    print(sampler.likelihood_vals[-1])
     plt.ylabel("Log-likelihood")
     plt.xlabel("Iteration")
 
@@ -46,7 +47,8 @@ def main():
     reward_likelihood = get_reward_function_log_likelihood(planner,
             reward_matrix, demonstrations)
     plt.plot([0], [reward_likelihood], marker='o')
-    plt.show()
+    print(reward_likelihood)
+    plt.savefig("likelihoods.png")
 
 if __name__ == "__main__":
     main()
