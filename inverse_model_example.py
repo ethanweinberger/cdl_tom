@@ -44,20 +44,18 @@ def inverse_model_example():
 
     heatmap_2d(reward_matrix, "Recovered Reward Values")
     
-    #generate_reward_prior()
 	
-def generate_reward_prior():
-    mdp = make_grid_world_from_file("empty_map.mp")
-    mdp.visualize_initial_map()
-    planner = Planner(mdp, sample_rate=5)
+def generate_reward_prior(map_list = ["top_right.mp", "top_left.mp", "bottom_right.mp", "bottom_left.mp",
+    "center.mp"], save_prior=False):
 
-    expert_demonstrations = generate_demonstrations(planner, args.num_demonstrations)
+    expert_demonstrations = []
+    for map_name in map_list:
+        mdp = make_grid_world_from_file(map_name)
+        mdp.visualize_initial_map()
+        planner = Planner(mdp, sample_rate=5)
 
-    mdp2 = make_grid_world_from_file("empty_map2.mp")
-    mdp2.visualize_initial_map()
-    planner2 = Planner(mdp2, sample_rate=5)
+        expert_demonstrations.extend(generate_demonstrations(planner, args.num_demonstrations))
 
-    expert_demonstrations.extend(generate_demonstrations(planner2, args.num_demonstrations))
     random.shuffle(expert_demonstrations)
 
     num_states = mdp.height * mdp.width
@@ -66,6 +64,10 @@ def generate_reward_prior():
             feature_map, planner, expert_demonstrations, args.learning_rate, args.num_iterations)
 
     reward_matrix = np.reshape(reward_array, (mdp.height, mdp.width))
+
+    if save_prior:
+        np.save("reward_prior", reward_matrix)
+    
     heatmap_2d(reward_matrix, "Recovered Reward Values")
 
 def save_plan(output_name, map_name, action_seq, state_seq):
@@ -96,6 +98,3 @@ def save_plan(output_name, map_name, action_seq, state_seq):
     with output_file:
         writer = csv.writer(output_file)
         writer.writerows(data)
-
-if __name__ == "__main__":
-    main()
