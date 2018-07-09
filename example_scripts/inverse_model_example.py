@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+
 import csv
 from GridWorldMDP import GridWorldMDP
 from Planner import Planner

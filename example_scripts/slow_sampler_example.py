@@ -1,12 +1,14 @@
 """
-Script to demonstrate a reward function sampler that is provided
-with a reward prior file
+Script to demonstrate the "slow" sampling method for testing reward functions
 """
+import sys
+sys.path.append("../")
+
 from utils import make_grid_world_from_file
 from utils import generate_demonstrations
 from vis_utils import heatmap_2d
 from Planner import Planner
-from PriorRewardSampler import PriorRewardSampler
+from Samplers.SlowRewardSampler import SlowRewardSampler
 
 import matplotlib.pyplot as plt
 import argparse
@@ -18,7 +20,7 @@ parser.add_argument("--num_demonstrations", type=int, default=25,
         help="Number of expert demonstrations")
 args = parser.parse_args()
 
-def prior_sampler_example():
+def slow_sampler_example(save_prior=False):
 
     mdp = make_grid_world_from_file(args.map) 
     mdp.visualize_initial_map()
@@ -26,8 +28,10 @@ def prior_sampler_example():
 
     demonstrations = generate_demonstrations(planner, args.num_demonstrations)
 
-    sampler = PriorRewardSampler(planner) 
-    reward_matrix = sampler.sample_reward_functions_softmax(demonstrations)
+    sampler = SlowRewardSampler(planner) 
+    reward_matrix = sampler.sample_reward_functions(demonstrations)
+    if save_prior:
+        np.save("slow_reward_prior", reward_matrix) 
 
     plt.plot(sampler.likelihood_vals)
     plt.ylabel("Log-likelihood")
@@ -37,4 +41,4 @@ def prior_sampler_example():
     heatmap_2d(reward_matrix)
 
 if __name__ == "__main__":
-    prior_sampler_example()
+    slow_sampler_example()

@@ -1,6 +1,8 @@
 """
 Test script for forward model.
 """
+import sys
+sys.path.append("../")
 
 from GridWorldMDP import GridWorldMDP
 from utils import make_grid_world_from_file

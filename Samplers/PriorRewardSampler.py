@@ -10,7 +10,7 @@ from utils import Step
 from Planner import Planner
 
 class PriorRewardSampler(object):
-    def __init__(self, planner, prior_file="reward_prior.npy"):
+    def __init__(self, planner, prior_file="../reward_prior.npy"):
         self.planner = planner
         self.likelihood_vals = []
         self.reward_prior = np.load(prior_file)
