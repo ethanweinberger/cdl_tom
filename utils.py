@@ -12,7 +12,7 @@ from GridWorldMDP import GridWorldMDP
 from collections import namedtuple
 
 #TODO: Refactor this into a class
-Step = namedtuple('Step', 'cur_state action reward')
+Step = namedtuple('Step', 'cur_state action')
 
 def make_grid_world_from_file(file_name):
     """
@@ -66,7 +66,7 @@ def get_reward_function_log_likelihood(planner, reward_matrix, demonstrations):
         planner (Planner): Planner object representing the true mdp
         reward_matrix (Height * Width array): Matrix representing the rewards
                                                contained in each state
-        demonstrations (List of step lists): List of demonstrations composed
+        Demonstrations (List of step lists): List of demonstrations composed
                                              of lists of step tuples
 
     Returns:

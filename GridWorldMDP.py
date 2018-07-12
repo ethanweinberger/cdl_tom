@@ -12,7 +12,7 @@ class GridWorldMDP(object):
     ''' Class for a Grid World MDP '''
 
     # Static constants.
-    ACTIONS = ["stay", "up", "down", "left", "right"]
+    ACTIONS = ["stay", "up", "down", "left", "right", "up_right", "up_left", "down_left", "down_right"]
 
     def __init__(self,
                 width=5,
@@ -151,6 +151,14 @@ class GridWorldMDP(object):
             next_state = GridWorldState(state.x + 1, state.y)
         elif action == "left" and state.x > 1 and not self.is_wall(state.x - 1, state.y):
             next_state = GridWorldState(state.x - 1, state.y)
+        elif action == "up_right" and state.x < self.width and state.y < self.height and not self.is_wall(state.x + 1, state.y + 1):
+            next_state = GridWorldState(state.x + 1, state.y + 1)
+        elif action == "up_left" and state.x > 1 and state.y < self.height and not self.is_wall(state.x - 1, state.y + 1):
+            next_state = GridWorldState(state.x - 1, state.y + 1)
+        elif action == "down_left" and state.x > 1 and state.y > 1 and not self.is_wall(state.x - 1, state.y - 1):
+            next_state = GridWorldState(state.x - 1, state.y - 1)
+        elif action == "down_right" and state.x < self.width and state.y > 1 and not self.is_wall(state.x + 1, state.y - 1):
+            next_state = GridWorldState(state.x + 1, state.y - 1)
         elif action == "stay":
             next_state = GridWorldState(state.x, state.y)
         else:

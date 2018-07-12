@@ -8,9 +8,9 @@ from action import Action
 import numpy as np
 
 class Agent_Type(Enum):
-    BICYCLIST    = 1
+    BIKER        = 1
     PEDESTRIAN   = 2
-    SKATEBOARDER = 3
+    SKATER       = 3
     CART         = 4
     CAR          = 5
     BUS          = 6
@@ -39,16 +39,15 @@ class Agent:
 
         """
         initial_line        = lines[0]
-        split_line          = initial_line.split()
-        agent_type_string   = split_line[-1]
+        agent_type_string   = initial_line[-1]
         agent_type_string   = agent_type_string.strip('"')
 
-        if agent_type_string == "Bicyclist":
-            return Agent_Type.BICYCLIST
+        if agent_type_string == "Biker":
+            return Agent_Type.BIKER
         elif agent_type_string == "Pedestrian":
             return Agent_Type.PEDESTRIAN
-        elif agent_type_string == "Skateboarder":
-            return Agent_Type.SKATEBOARDER
+        elif agent_type_string == "Skater":
+            return Agent_Type.SKATER
         elif agent_type_string == "Cart":
             return Agent_Type.CART
         elif agent_type_string == "Car":
@@ -56,6 +55,7 @@ class Agent:
         elif agent_type_string == "Bus":
             return Agent_Type.BUS
         else:
+            print(agent_type_string)
             raise ValueError("Agent type not one of the six possibilities")
 
     def get_boxes_from_lines(self, lines):
@@ -74,11 +74,10 @@ class Agent:
         """
         box_list = []
         for line in lines:
-            split_line = line.split()
-            xmin = int(split_line[1])
-            ymin = int(split_line[2])
-            xmax = int(split_line[3])
-            ymax = int(split_line[4])
+            xmin = int(line[1])
+            ymin = int(line[2])
+            xmax = int(line[3])
+            ymax = int(line[4])
 
             new_box = Box(xmin, ymin, xmax, ymax)
             box_list.append(new_box)
