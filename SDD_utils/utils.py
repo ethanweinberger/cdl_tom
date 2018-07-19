@@ -1,9 +1,13 @@
 # Utility functions for processing annotations
 
 import sys
+import cv2
+import numpy as np
+from PIL import Image
 from agent import Agent
 from matplotlib.path import Path
 from collections import namedtuple
+from position import Position
 
 Step = namedtuple('Step', 'cur_state action')
 
@@ -92,7 +96,6 @@ def create_video_grid(vid_width, vid_height, block_dim):
             path = Path(vertex_list)
             grid_row.append(path)
         grid.append(grid_row)
-    print(len(grid) * len(grid[0]))
     return grid
               
 def get_agent_positions_in_grid(agent, grid):
@@ -114,8 +117,8 @@ def get_agent_positions_in_grid(agent, grid):
     for position in agent.positions:
         for (grid_row, grid_row_index) in zip(grid, range(len(grid))):
             grid_col_index = _get_position_grid_column(position, grid_row)
-            if grid_col_index:
-                grid_position_list.append((grid_col_index, grid_row_index))
+            if grid_col_index or grid_col_index == 0:
+                grid_position_list.append(Position(grid_col_index, grid_row_index))
                 break
 
     return grid_position_list     
@@ -136,7 +139,6 @@ def _get_position_grid_column(position, grid_row):
     for (box, grid_col_index) in zip(grid_row, range(len(grid_row))):
         if box.contains_point((position.x, position.y)):
             return grid_col_index
-
     return None
 
 def get_steps_from_position_list(position_list):
@@ -157,38 +159,74 @@ def get_steps_from_position_list(position_list):
     for i in range(len(position_list) - 1):
         current_position = position_list[i]
         next_position = position_list[i+1]
-        if current_position == next_position:
-          continue
+        if (current_position.x == next_position.x and 
+            current_position.y == next_position.y):
+            continue
 
         #Cardinal directions
-        if (next_position[0] - current_position[0] == 1 and 
-            next_position[1] - current_position[1] == 0):
+        if (next_position.x - current_position.x == 1 and 
+            next_position.y - current_position.y == 0):
             next_action = "right"
-        elif (next_position[0] - current_position[0] == -1 and 
-            next_position[1] - current_position[1] == 0):
+        elif (next_position.x - current_position.x == -1 and 
+            next_position.y - current_position.y == 0):
             next_action = "left"
-        elif (next_position[0] - current_position[0] == 0 and 
-            next_position[1] - current_position[1] == 1):
+        elif (next_position.x - current_position.x == 0 and 
+            next_position.y - current_position.y == 1):
             next_action = "up"
-        elif (next_position[0] - current_position[0] == 0 and 
-            next_position[1] - current_position[1] == -1):
+        elif (next_position.x - current_position.x == 0 and 
+            next_position.y - current_position.y == -1):
             next_action = "down"
 
         #Extended directions
-        elif (next_position[0] - current_position[0] == 1 and 
-            next_position[1] - current_position[1] == 1):
+        elif (next_position.x - current_position.x == 1 and 
+            next_position.y - current_position.y == 1):
             next_action = "up_right"
-        elif (next_position[0] - current_position[0] == -1 and 
-            next_position[1] - current_position[1] == 1):
+        elif (next_position.x - current_position.x == -1 and 
+            next_position.y - current_position.y == 1):
             next_action = "up_left"
-        elif (next_position[0] - current_position[0] == -1 and 
-            next_position[1] - current_position[1] == -1):
+        elif (next_position.x - current_position.x == -1 and 
+            next_position.y - current_position.y == -1):
             next_action = "down_left"
-        elif (next_position[0] - current_position[0] == 1 and 
-            next_position[1] - current_position[1] == -1):
+        elif (next_position.x - current_position.x == 1 and 
+            next_position.y - current_position.y == -1):
             next_action = "down_right"
-
         next_step = Step(current_position, next_action)
+        step_list.append(next_step)
+    
+    if len(step_list) == 0:
+        next_step = Step(position_list[0], "stay")
         step_list.append(next_step)
 
     return step_list
+
+def get_video_average(video_path):
+    """
+    Given the path to a video file, returns an array
+    where each value in the array is the average pixel
+    value over all frames of the video
+    
+    Args:
+        video_path (String): Path to video file
+    Returns:
+
+    """
+    vidcap = cv2.VideoCapture(video_path)
+
+    width = int(vidcap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(vidcap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    num_color_channels = 3
+
+    avg_frame = np.zeros((height, width, num_color_channels), dtype=np.float64)
+    frames = 0
+
+    while True:
+        success, img = vidcap.read()
+        if not success:
+            break
+        avg_frame += img
+        frames += 1
+
+    avg_frame = avg_frame / frames
+    ####avg_frame = cv2.cvtColor(avg_frame, cv2.COLOR_BGR2RGB)
+    avg_frame = avg_frame.astype(np.uint8)
+    cv2.imwrite("average_frame.png", avg_frame)  
